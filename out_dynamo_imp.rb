@@ -216,4 +216,29 @@ module Fluent
       result
     end
   end
+
+  class DynamoRawOutput < DynamoOutput
+    Fluent::Plugin.register_output('dynamo-raw', self)
+    attr_reader :host, :port, :kpi_items
+
+    def convert (hash)
+      r = hash['message']
+      record = {}
+      r.split("\t").each do |item|
+        kv = item.split(":", 2)
+        key = kv[0]
+        val = kv[1]
+        record[key] = val
+      end
+      t = Time.at(record['time'].to_i)
+      result={}
+      result['time'] = t.strftime("%Y%m%d%H%M%S%L").to_i
+      result['campaign_token'] = record['campaign_token']
+      result['publisher_token'] = record['publisher_token']
+      result['id']=record['campaign_token']+'-'+record['publisher_token']
+
+      result
+    end
+
+  end
 end
